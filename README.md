@@ -7,7 +7,7 @@ A `FastAPI` backend service for:
 
 
 ## Roadway 
-- [X] Non-collapsing timeline
+- [X] Non-colliding timeline
 - [ ] Tags for organizing activities
 - [ ] Visualization support
 
