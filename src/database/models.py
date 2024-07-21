@@ -29,6 +29,33 @@ class UserUpdate(SQLModel):
     username: str | None = None
 
 
+class TagActivityLink(SQLModel, table=True):
+    tag_id: int | None = Field(default=None, foreign_key="tag.id", primary_key=True)
+    activity_id: int | None = Field(default=None, foreign_key="activity.id", primary_key=True)
+
+
+class TagBase(SQLModel):
+    name: str = Field(index=True)
+
+
+class Tag(TagBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    activities: list["Activity"] = Relationship(back_populates="tags", link_model=TagActivityLink,
+                                                sa_relationship_kwargs={"lazy": "noload"})
+
+
+class TagCreate(TagBase):
+    pass
+
+
+class TagPublic(TagBase):
+    id: int
+
+
+class TagUpdate(SQLModel):
+    title: str | None = None
+
+
 class ActivityBase(SQLModel):
     content: str = Field(default="", max_length=200)
     beginning_datetime: datetime
@@ -41,6 +68,8 @@ class Activity(ActivityBase, table=True):
 
     owner_id: int = Field(index=True, foreign_key="user.id")
     owner: User = Relationship(back_populates="activities")
+
+    tags: list[Tag] = Relationship(back_populates="activities", link_model=TagActivityLink)
 
 
 class ActivityCreate(ActivityBase):
@@ -64,3 +93,5 @@ class ActivityPublicWithOwner(ActivityPublic):
 
 User.update_forward_refs(Activity=Activity)
 UserPublicWithActivities.update_forward_refs(Activity=Activity)
+
+Tag.update_forward_refs(Activity=Activity)

@@ -66,3 +66,43 @@ def delete_activity(*, session: Session = Depends(get_session), activity_id: int
     session.delete(db_activity)
     session.commit()
     return {"message": "Activity deleted"}
+
+
+@router.get("/{activity_id}/tags")
+def get_tags_of_activity(*, session: Session = Depends(get_session), activity_id: int):
+    db_activity = session.get(Activity, activity_id)
+    if not db_activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    tags = db_activity.tags
+    return [t.name for t in db_activity.tags]
+
+
+@router.patch("/{activity_id}/addtag/{tag_name}")
+def add_tag_to_activity(*, session: Session = Depends(get_session), activity_id: int, tag_name: str):
+    db_activity = session.get(Activity, activity_id)
+    if not db_activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    tag = session.exec(select(Tag).limit(1).where(Tag.name == tag_name)).one()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    db_activity.tags.append(tag)
+    session.add(db_activity)
+    session.commit()
+    return [t.name for t in db_activity.tags]
+
+
+@router.patch("/{activity_id}/removetag/{tag_name}")
+def add_tag_to_activity(*, session: Session = Depends(get_session), activity_id: int, tag_name: str):
+    db_activity = session.get(Activity, activity_id)
+    if not db_activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    found = False
+    for tag in db_activity.tags:
+        if tag.name == tag_name:
+            db_activity.tags.remove(tag)
+            found = True
+    if not found:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    session.add(db_activity)
+    session.commit()
+    return [t.name for t in db_activity.tags]
